@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>I spent $50 letting Claude fix my files — Claude Articles</title>
+<meta name="description" content="A brutally honest account of hitting my usage limit, watching my budget evaporate, and understanding why the obvious approach was the wrong one.">
+<meta property="og:title" content="I spent $50 letting Claude fix my files">
+<meta property="og:description" content="Why the naive approach to AI file refactoring costs 10x more than it should — and the workflow that fixes it.">
+<meta property="og:type" content="article">
+<link rel="canonical" href="https://username.github.io/articles/claude-token-waste/">
+<link rel="stylesheet" href="../../_shared/style.css">
+<style>
+  /* ── page-level tabs ── */
+  .page-nav { background: var(--bg); border-bottom: 1px solid var(--border); padding: 0 1.5rem; display: flex; align-items: center; gap: 0; overflow-x: auto; scrollbar-width: none; }
+  .page-nav::-webkit-scrollbar { display: none; }
+  .pnav-btn { font-size: 12px; padding: 0 14px; height: 44px; border: none; background: transparent; color: var(--text3); cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; transition: all .15s; flex-shrink: 0; }
+  .pnav-btn:hover { color: var(--text); }
+  .pnav-btn.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
+  .page { display: none; }
+  .page.active { display: block; }
+  /* ── metrics ── */
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr)); gap: 10px; margin-bottom: 1.25rem; }
+  .metric { background: var(--bg2); border-radius: var(--radius); padding: 12px 14px; }
+  .metric .mn { font-size: 22px; font-weight: 700; margin-top: 3px; }
+  .metric .ml { font-size: 11px; color: var(--text3); }
+  /* ── bar chart ── */
+  .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .bar-label { font-size: 11px; color: var(--text3); min-width: 48px; text-align: right; flex-shrink: 0; }
+  .bar-track { flex: 1; display: flex; gap: 2px; align-items: center; min-width: 0; }
+  .bar-seg { height: 20px; border-radius: 3px; flex-shrink: 0; cursor: default; }
+  .bar-total { font-size: 10px; color: var(--text3); min-width: 32px; text-align: right; flex-shrink: 0; }
+  .skip-badge { font-size: 10px; color: var(--green-dark); background: var(--green-light); padding: 1px 6px; border-radius: 10px; margin-left: 4px; white-space: nowrap; }
+  /* ── filter row ── */
+  .filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
+  .filt-btn { font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border2); background: transparent; color: var(--text3); cursor: pointer; transition: all .15s; }
+  .filt-btn.on-red { background: var(--red-light); color: var(--red-dark); border-color: transparent; }
+  .filt-btn.on-green { background: var(--green-light); color: var(--green-dark); border-color: transparent; }
+  /* ── legend ── */
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 1rem; }
+  .leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text3); }
+  .leg-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  /* ── tabs ── */
+  .tab-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
+  .tab-btn { font-size: 12px; padding: 5px 14px; border-radius: var(--radius); border: 1px solid var(--border2); background: transparent; color: var(--text3); cursor: pointer; transition: all .15s; }
+  .tab-btn.on { background: var(--blue-light); color: var(--blue-dark); border-color: transparent; font-weight: 600; }
+  .tab-pane { display: none; }
+  .tab-pane.on { display: block; }
+  /* ── annotation ── */
+  .ann { border-left: 3px solid var(--blue); border-radius: 0 var(--radius) var(--radius) 0; background: var(--blue-light); padding: 10px 14px; margin-bottom: 10px; font-size: 13px; line-height: 1.5; }
+  .ann.good { border-color: var(--green); background: var(--green-light); }
+  .ann.bad { border-color: var(--red); background: var(--red-light); }
+  .ann-label { font-size: 10px; font-weight: 700; margin-bottom: 3px; color: var(--blue); }
+  .ann.good .ann-label { color: var(--green); }
+  .ann.bad .ann-label { color: var(--red); }
+  /* ── mech cards ── */
+  .mcard { border-radius: var(--radius); padding: 10px 14px; font-size: 12px; line-height: 1.55; margin-bottom: 8px; }
+  .mcard-bad { background: var(--red-light); border: 1px solid var(--red); }
+  .mcard-good { background: var(--green-light); border: 1px solid var(--green); }
+  .mcard .mch { font-weight: 700; margin-bottom: 5px; }
+  .mcard-bad .mch { color: var(--red-dark); }
+  .mcard-good .mch { color: var(--green-dark); }
+  .mech-grid { display: grid; grid-template-columns: 1fr 32px 1fr; gap: 0; align-items: start; margin-bottom: 10px; }
+  .mech-arrow { display: flex; align-items: center; justify-content: center; padding-top: 12px; font-size: 18px; color: var(--text3); }
+  .ctx-vis { display: flex; gap: 3px; flex-wrap: wrap; margin: 8px 0 4px; }
+  .ctx-block { height: 14px; border-radius: 2px; }
+  /* ── compare ── */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+  .compare .ch { font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+  .tl-step { padding: 4px 0 4px 18px; position: relative; font-size: 12px; margin-bottom: 6px; }
+  .tl-step::before { content:''; position: absolute; left: 3px; top: 10px; width: 7px; height: 7px; border-radius: 50%; }
+  .tl-bad::before { background: var(--red); }
+  .tl-good::before { background: var(--green); }
+  .tl-cost { font-size: 10px; color: var(--text3); }
+  /* ── chat / stepper ── */
+  .chat-wrap { background: var(--bg2); border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 1rem; }
+  .bubble { max-width: 88%; margin-bottom: 10px; }
+  .bubble.user { margin-left: auto; }
+  .bubble-lbl { font-size: 10px; color: var(--text3); margin-bottom: 3px; }
+  .bubble.user .bubble-lbl { text-align: right; }
+  .bubble-inner { padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.55; }
+  .bubble.user .bubble-inner { background: var(--blue-light); color: var(--text); border-bottom-right-radius: 4px; }
+  .bubble.claude .bubble-inner { background: var(--bg); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+  /* ── step nav ── */
+  .step-nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .step-dot { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; cursor: pointer; color: var(--text3); transition: all .15s; flex-shrink: 0; }
+  .step-dot.done { background: var(--green-light); color: var(--green-dark); border-color: transparent; }
+  .step-dot.active { background: var(--blue-light); color: var(--blue-dark); border-color: transparent; }
+  .step-dot.bad { background: var(--red-light); color: var(--red-dark); border-color: transparent; }
+  .step-line { flex: 1; height: 1px; background: var(--border); min-width: 8px; }
+  .nav-btns { display: flex; gap: 8px; margin-top: 1rem; }
+  .nav-btns button { flex: 1; padding: 8px; font-size: 13px; border: 1px solid var(--border2); border-radius: var(--radius); background: transparent; color: var(--text); cursor: pointer; transition: background .15s; }
+  .nav-btns button:hover { background: var(--bg2); }
+  /* ── tooltip ── */
+  .tt { position: absolute; background: var(--bg); border: 1px solid var(--border2); border-radius: var(--radius); padding: 8px 12px; font-size: 12px; pointer-events: none; z-index: 50; min-width: 160px; display: none; }
+  /* ── content wrapper ── */
+  .content { max-width: 860px; margin: 0 auto; padding: 1.5rem 1.5rem 4rem; }
+  .sec-head { margin-bottom: 1.25rem; }
+  .sec-head h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .sec-head p { font-size: 13px; color: var(--text2); }
+  /* ── diagrams page ── */
+  .diag-img { width: 100%; border-radius: var(--radius-lg); border: 1px solid var(--border); margin: 1rem 0 6px; display: block; }
+  .diag-caption { text-align: center; font-size: 12px; color: var(--text3); margin-bottom: 1.75rem; font-style: italic; }
+  /* ── eval grids ── */
+  .eval-grid { display: grid; gap: 3px; margin: 6px 0; }
+  .eval-cell { height: 18px; border-radius: 2px; font-size: 9px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+  @media(max-width:600px) { .mech-grid,.compare { grid-template-columns: 1fr; } .mech-arrow { display: none; } }
+</style>
+</head>
+<body>
+
+<header class="site-nav"></header>
+
+<!-- Page-level section tabs -->
+<div class="page-nav">
+  <button class="pnav-btn active" onclick="showPage('article',this)">Article</button>
+  <button class="pnav-btn" onclick="showPage('before',this)">Before viz</button>
+  <button class="pnav-btn" onclick="showPage('after',this)">After viz</button>
+  <button class="pnav-btn" onclick="showPage('mechanics',this)">Mechanics</button>
+  <button class="pnav-btn" onclick="showPage('prompting',this)">Prompting guide</button>
+  <button class="pnav-btn" onclick="showPage('diagrams',this)">Diagrams</button>
+</div>
+
+<!-- ═══ ARTICLE ═══ -->
+<div class="page active" id="page-article">
+  <div class="article-content">
+
+    <div class="kicker">AI TOOLS &nbsp;·&nbsp; PRODUCTIVITY &nbsp;·&nbsp; LEARNED THE HARD WAY</div>
+    <h1>I spent $50 letting Claude fix my&nbsp;files &mdash; here&rsquo;s what I did wrong</h1>
+    <p class="subtitle">A brutally honest account of hitting my usage limit, watching my budget evaporate, and finally understanding why the obvious approach was the wrong one.</p>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:2rem 0;">
+
+    <p>It was a Tuesday afternoon and I had what felt like a perfectly reasonable task.</p>
+    <p>I&rsquo;d built up ten instruction files &mdash; &ldquo;skills&rdquo; &mdash; for Claude, Anthropic&rsquo;s AI assistant. Over months they&rsquo;d gotten messy. Each one had grown independently, so they contradicted each other, used different formatting, repeated the same ideas in different words. Classic documentation drift. I figured I&rsquo;d spend an hour getting Claude to tidy them all up: make them consistent, strip the redundancy, clean up the language.</p>
+    <p>Two hours later, I&rsquo;d hit my usage limit on Claude.ai. My bill showed nearly $50. The files were&hellip; marginally better. And I had absolutely no idea what had gone wrong.</p>
+    <p><em>This is that story, and what I now do instead.</em></p>
+
+    <h2>The plan that seemed totally sensible</h2>
+    <p>My approach was this: open one conversation in Claude.ai, upload all ten files, and say something like &ldquo;refactor these for consistency and remove any redundancy.&rdquo;</p>
+    <p>I mean &mdash; that&rsquo;s the point of Claude, right? You describe what you want, it does it. Simple.</p>
+    <p>Except Claude immediately came back with questions. Four of them. What did I mean by consistent? Should it preserve all the examples? Were there files it shouldn&rsquo;t touch? What should it prioritize?</p>
+    <p>Fine. I answered them. We got started.</p>
+    <p>By file three, I noticed something odd. The responses were getting slower. The conversation was getting long. Claude seemed to be&hellip; re-reading things it had already read. I&rsquo;d ask it to tweak something in file seven, and it would summarize what it remembered about files one through six before getting to the point.</p>
+    <p><em>I assumed this was just how it worked. I kept going.</em></p>
+
+    <div class="interactive-label">Interactive visualization &mdash; token waste by turn</div>
+    <div class="diagram-wrap">
+      <img src="diagrams/before-expensive.svg" alt="Token waste diagram — the expensive way" loading="lazy">
+      <div class="caption">What actually happened. By skill 8, Claude carries all of skills 1&ndash;7 as dead weight every turn. <a href="#" onclick="showPage('before',document.querySelectorAll('.pnav-btn')[1]);return false;">See interactive version &rarr;</a></div>
+    </div>
+
+    <h2>The moment I realized something was very wrong</h2>
+    <p>Around file eight, I got a notification. I&rsquo;d burned through my usage allowance.</p>
+    <p>I checked my dashboard. Nearly $50 in two hours. For editing text files.</p>
+    <p>I sat with that number for a moment. Fifty dollars. I could have hired a junior editor for an afternoon. I could have done it myself in three hours with a cup of coffee and a text editor. Instead I&rsquo;d handed it to Claude, assumed it would be fast and cheap, and watched my budget quietly evaporate in the background while I answered emails.</p>
+    <p><em>What had I actually paid for?</em></p>
+
+    <h2>What was actually happening under the hood</h2>
+    <p>When I dug into it afterward, the explanation was almost comically simple &mdash; and I&rsquo;d had no reason to know it in advance.</p>
+    <p>Claude &mdash; like all large language models &mdash; works on a &ldquo;context window.&rdquo; Everything that&rsquo;s happened in the conversation so far gets sent to the model on every single turn. Every message. Every file. Every response. All of it, every time.</p>
+    <p>So when I was working on file eight, Claude wasn&rsquo;t just processing file eight. It was also carrying files one through seven, plus every message we&rsquo;d exchanged, plus every response it had generated. By that point I was sending something like 60,000 tokens per turn to Claude Sonnet &mdash; and paying for every single one.</p>
+    <p>The actual useful work &mdash; the edits to file eight &mdash; was maybe 2,000 tokens. I was paying for 58,000 tokens of baggage I didn&rsquo;t need.</p>
+    <p><strong>93% of what I paid for was re-reading old conversations. I had been, quite literally, paying Claude to remember things it didn&rsquo;t need to remember.</strong></p>
+
+    <h2>The fix is almost embarrassingly simple</h2>
+    <p>Once you understand the problem, the solution is obvious in retrospect.</p>
+    <p>Don&rsquo;t put all ten files in one Claude conversation. Use ten separate conversations &mdash; one per file. Each conversation stays small. The context never grows. You pay for the work, not the history.</p>
+    <p>But there&rsquo;s a catch: if the whole point is to make the files consistent with each other, how do you do that across separate Claude sessions that share no memory?</p>
+    <p>This is where it gets interesting. The answer is: you do the &ldquo;figuring out what&rsquo;s consistent&rdquo; work separately, cheaply, up front &mdash; and then hand each conversation a pre-written rulebook.</p>
+    <p><em>Instead of asking Claude to discover consistency as it goes, you define consistency before it starts. Then each session just executes against the rules &mdash; it doesn&rsquo;t need to know anything about the other files.</em></p>
+
+    <div class="diagram-wrap">
+      <img src="diagrams/after-efficient.svg" alt="The efficient way — isolated sessions" loading="lazy">
+      <div class="caption">Ten small, isolated Claude sessions instead of one growing one. Context stays flat. Cost stays predictable.</div>
+    </div>
+
+    <h2>The smarter workflow (the one I use now)</h2>
+    <p>Here&rsquo;s how I&rsquo;d approach the same task today. It takes a bit more planning up front, but the total cost is around $4 instead of $50, and the output is actually better.</p>
+    <p><strong>Step 1: spend five minutes on intent, not files.</strong> Before touching a single file, open one cheap conversation with Claude Haiku &mdash; Anthropic&rsquo;s fastest, most economical model &mdash; and write out what you actually mean by &ldquo;consistent.&rdquo; Write it as a spec you&rsquo;ll paste into every subsequent conversation. This costs almost nothing.</p>
+    <p><strong>Step 2: scan for repeated ideas, once.</strong> Load all ten files into one Claude Haiku session and ask only: &ldquo;what ideas appear across multiple files, expressed differently?&rdquo; Not &ldquo;fix them&rdquo; &mdash; just &ldquo;find them.&rdquo; This is the only moment all ten files exist in the same conversation.</p>
+    <p><strong>Step 3: write canonical definitions.</strong> For each repeated idea, write one authoritative version. This is your rulebook, and you control it.</p>
+    <p><strong>Step 4: edit each file in its own fresh Claude session.</strong> Each session gets: the spec, the rulebook, the specific list of changes for that one file, and that file&rsquo;s content. Nothing else. One or two turns with Claude Sonnet. Done.</p>
+
+    <div class="diagram-wrap">
+      <img src="diagrams/semantic-rulebook.svg" alt="The shared rulebook approach" loading="lazy">
+      <div class="caption">The shared rulebook is the key. Every Claude session reads the same definitions &mdash; consistency is structural, not dependent on memory.</div>
+    </div>
+
+    <blockquote>The insight is that cross-file consistency doesn&rsquo;t require cross-file memory. It just requires a shared definition, written once and pasted everywhere.</blockquote>
+
+    <h2>What I wish I&rsquo;d known</h2>
+    <p>The mental model that actually helps: think of Claude&rsquo;s context window like a taxi meter. Every token in the conversation is a passenger in the cab, and you pay for all of them every time the cab moves.</p>
+    <p>The other thing I wish I&rsquo;d known: Claude isn&rsquo;t lazy when it asks clarifying questions. It&rsquo;s telling you that your prompt was underspecified. Every clarification question is a wasted round trip. Write your opening prompt as if Claude has no ability to ask follow-ups.</p>
+    <p><em>It feels like more work up front. It&rsquo;s dramatically less work in total.</em></p>
+
+    <h2>The $46 lesson</h2>
+    <p>I&rsquo;ve since run the same ten-file task using the smarter workflow. Total cost: $3.80. Time: about twenty minutes of actual attention. Output quality: genuinely better.</p>
+    <p>Claude is genuinely powerful, but it rewards people who understand how it works &mdash; and quietly penalizes people who treat it like magic. I was firmly in the second camp.</p>
+
+    <div class="diagram-wrap">
+      <img src="diagrams/cost-comparison.svg" alt="Cost comparison" loading="lazy">
+      <div class="caption">The same ten files. The same quality result. A $46 difference in what you pay Anthropic.</div>
+    </div>
+
+    <p><em>That&rsquo;s it. That&rsquo;s the $50 lesson.</em></p>
+    <hr style="border:none;border-top:1px solid var(--border);margin:2rem 0;">
+    <p style="color:var(--text2);font-style:italic;">If this saved you from making the same mistake, share it with someone who uses Claude daily. They probably don&rsquo;t know about the taxi meter either.</p>
+    <p style="font-size:13px;color:var(--text3);margin-top:1rem;">#Claude &nbsp;#Anthropic &nbsp;#Productivity &nbsp;#LessonsLearned &nbsp;#AITools</p>
+  </div>
+</div>
+
+<!-- ═══ BEFORE VIZ ═══ -->
+<div class="page" id="page-before">
+  <div class="content">
+    <div class="sec-head"><h2>Before: monolithic session token waste</h2><p>10 skills × ~275 lines each in one conversation. Each row = one turn. Hover bars for details.</p></div>
+    <div class="metrics">
+      <div class="metric"><div class="ml">total turns</div><div class="mn" id="b-turns" style="color:var(--red)">—</div></div>
+      <div class="metric"><div class="ml">total tokens</div><div class="mn" id="b-total" style="color:var(--red)">—</div></div>
+      <div class="metric"><div class="ml">useful tokens</div><div class="mn" id="b-useful" style="color:var(--green)">—</div></div>
+      <div class="metric"><div class="ml">waste ratio</div><div class="mn" id="b-waste" style="color:var(--red)">—</div></div>
+    </div>
+    <div class="filter-row" id="b-filter"></div>
+    <div id="b-chart" style="position:relative;"></div>
+    <div class="tt" id="b-tip"></div>
+    <div class="legend">
+      <div class="leg-item"><div class="leg-dot" style="background:#F09595"></div>skill file re-read</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#E24B4A"></div>prior history</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#EF9F27"></div>eval reruns</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#FAC775"></div>clarifications</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#97C459"></div>useful work</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ AFTER VIZ ═══ -->
+<div class="page" id="page-after">
+  <div class="content">
+    <div class="sec-head"><h2>After: isolated sessions + compressed skills</h2><p>Each skill gets its own fresh Claude session. Haiku for edits, Sonnet for evals only when logic changed.</p></div>
+    <div class="metrics">
+      <div class="metric"><div class="ml">total turns</div><div class="mn" id="a-turns" style="color:var(--green)">—</div></div>
+      <div class="metric"><div class="ml">total tokens</div><div class="mn" id="a-total" style="color:var(--green)">—</div></div>
+      <div class="metric"><div class="ml">useful tokens</div><div class="mn" id="a-useful" style="color:var(--green)">—</div></div>
+      <div class="metric"><div class="ml">waste ratio</div><div class="mn" id="a-waste" style="color:var(--green)">—</div></div>
+    </div>
+    <div class="filter-row" id="a-filter"></div>
+    <div id="a-chart" style="position:relative;"></div>
+    <div class="tt" id="a-tip"></div>
+    <div class="legend" style="margin-top:1rem;">
+      <div class="leg-item"><div class="leg-dot" style="background:#9FE1CB"></div>compressed skill (read once)</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#EF9F27"></div>eval (logic-changed only)</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#97C459"></div>useful work</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#C0DD97"></div>Claude Haiku edit</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MECHANICS ═══ -->
+<div class="page" id="page-mechanics">
+  <div class="content">
+    <div class="sec-head"><h2>Mechanics: how each improvement eliminates waste</h2><p>Step through each optimization to see exactly what changed in the Claude API call structure.</p></div>
+    <div class="tab-row">
+      <button class="tab-btn on" onclick="swTab('mech','ctx',this)">1. Context growth</button>
+      <button class="tab-btn" onclick="swTab('mech','compress',this)">2. Skill compression</button>
+      <button class="tab-btn" onclick="swTab('mech','session',this)">3. Session isolation</button>
+      <button class="tab-btn" onclick="swTab('mech','eval',this)">4. Selective evals</button>
+      <button class="tab-btn" onclick="swTab('mech','model',this)">5. Model tiering</button>
+    </div>
+
+    <div id="mech-ctx" class="tab-pane on">
+      <div class="mech-grid">
+        <div class="mcard mcard-bad">
+          <div class="mch">Before &mdash; unbounded context</div>
+          Every message re-sent on every Claude API call. After 20 turns across skills 1&ndash;7, skill 8 already carries 80,000+ tokens of irrelevant history.
+          <div class="ctx-vis" id="ctx-bad"></div>
+          <div style="font-size:10px;color:var(--red);margin-top:4px;" id="ctx-bad-count"></div>
+          <input type="range" min="1" max="30" value="1" id="ctx-slider" oninput="updateCtx(this.value)" style="width:100%;margin-top:8px;accent-color:var(--blue);">
+          <div style="font-size:10px;color:var(--text3);">&larr; drag to simulate turn count &rarr;</div>
+        </div>
+        <div class="mech-arrow">&rarr;</div>
+        <div class="mcard mcard-good">
+          <div class="mch">After &mdash; capped context</div>
+          Each skill gets a fresh Claude session. Context = compressed skill file + 2 turns. No bleed from other skills. Stays flat regardless of how many skills you process.
+          <div class="ctx-vis" id="ctx-good"></div>
+          <div style="font-size:10px;color:var(--green);margin-top:4px;" id="ctx-good-count"></div>
+          <br><span class="pill pill-green">saves ~40% of total spend</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="mech-compress" class="tab-pane">
+      <div class="mech-grid">
+        <div class="mcard mcard-bad">
+          <div class="mch">Before &mdash; 275-line SKILL.md every call</div>
+          Full file loaded on every turn (~1,800 tokens). Verbose prose, long examples, edge-case notes — almost none needed for an edit pass.
+          <div style="margin-top:8px;display:flex;flex-direction:column;gap:3px;">
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:130px;height:10px;background:#F09595;border-radius:2px;"></div><span style="font-size:10px;color:var(--text3);">prose instructions (110 lines)</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:84px;height:10px;background:#F5C4B3;border-radius:2px;"></div><span style="font-size:10px;color:var(--text3);">inline examples (70 lines)</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:48px;height:10px;background:#E24B4A;border-radius:2px;opacity:0.6;"></div><span style="font-size:10px;color:var(--text3);">edge-case notes (40 lines)</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:24px;height:10px;background:#97C459;border-radius:2px;"></div><span style="font-size:10px;color:var(--text3);">frontmatter (20 lines)</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:42px;height:10px;background:#B4B2A9;border-radius:2px;"></div><span style="font-size:10px;color:var(--text3);">redundant cross-skill (35 lines)</span></div>
+          </div>
+          <div style="font-size:11px;font-weight:700;color:var(--red);margin-top:6px;">~1,800 tokens &times; 3 turns = 5,400 tokens/skill</div>
+        </div>
+        <div class="mech-arrow">&rarr;</div>
+        <div class="mcard mcard-good">
+          <div class="mch">After &mdash; 80-line compressed form</div>
+          Frontmatter + numbered instruction list. Examples move to references/ loaded on-demand. Shared patterns deduped into a shared reference.
+          <div style="margin-top:8px;display:flex;flex-direction:column;gap:3px;">
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:24px;height:10px;background:#97C459;border-radius:2px;"></div><span style="font-size:10px;color:var(--text3);">frontmatter (20 lines)</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:54px;height:10px;background:#5DCAA5;border-radius:2px;"></div><span style="font-size:10px;color:var(--text3);">bullet instructions (45 lines)</span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:18px;height:10px;background:#9FE1CB;border-radius:2px;"></div><span style="font-size:10px;color:var(--text3);">ref pointers (15 lines)</span></div>
+          </div>
+          <div style="font-size:11px;font-weight:700;color:var(--green);margin-top:6px;">~520 tokens &times; 2 turns = 1,040 tokens/skill</div>
+          <br><span class="pill pill-green">saves ~20% of total spend</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="mech-session" class="tab-pane">
+      <div class="compare">
+        <div>
+          <div class="ch" style="color:var(--red-dark);">Before &mdash; one long session</div>
+          <div class="tl-step tl-bad">Skill 1 read + edit + eval<div class="tl-cost">Turns 1&ndash;3 &middot; ~6k tokens</div></div>
+          <div class="tl-step tl-bad">Skill 2 + history(S1) + edit<div class="tl-cost">Turns 4&ndash;6 &middot; ~12k tokens</div></div>
+          <div class="tl-step tl-bad">Skill 3 + history(S1+S2) + edit<div class="tl-cost">Turns 7&ndash;9 &middot; ~19k tokens</div></div>
+          <div class="tl-step tl-bad" style="opacity:.6;">&vellip; keeps growing</div>
+          <div class="tl-step tl-bad">Skill 10 &middot; history(S1&ndash;S9)<div class="tl-cost">Turns 28&ndash;30 &middot; ~65k tokens</div></div>
+          <div style="margin-top:8px;font-size:11px;font-weight:700;color:var(--red);">Total: ~250k&ndash;400k tokens</div>
+        </div>
+        <div>
+          <div class="ch" style="color:var(--green-dark);">After &mdash; 10 isolated Claude sessions</div>
+          <div class="tl-step tl-good">Session 1 &middot; Skill 1 only<div class="tl-cost">Turns 1&ndash;2 &middot; ~2k tokens</div></div>
+          <div class="tl-step tl-good">Session 2 &middot; Skill 2 only<div class="tl-cost">Turns 1&ndash;2 &middot; ~2k tokens</div></div>
+          <div class="tl-step tl-good">Session 3 &middot; Skill 3 only<div class="tl-cost">Turns 1&ndash;2 &middot; ~2k tokens</div></div>
+          <div class="tl-step tl-good">&vellip; stays constant per session</div>
+          <div class="tl-step tl-good">Session 10 &middot; Skill 10 only<div class="tl-cost">Turns 1&ndash;2 &middot; ~2k tokens</div></div>
+          <div style="margin-top:8px;font-size:11px;font-weight:700;color:var(--green);">Total: ~20k&ndash;40k tokens</div>
+        </div>
+      </div>
+      <span class="pill pill-green">saves ~40% &middot; biggest single lever</span>
+    </div>
+
+    <div id="mech-eval" class="tab-pane">
+      <div class="mech-grid">
+        <div class="mcard mcard-bad">
+          <div class="mch">Before &mdash; eval every skill, every iteration</div>
+          Full Claude Sonnet eval loops regardless of what changed. Renaming a YAML field triggers the same eval as rewriting core logic.
+          <div style="margin-top:8px;font-size:10px;color:var(--text3);">30 eval runs (10 skills &times; 3 iterations):</div>
+          <div class="eval-grid" style="grid-template-columns:repeat(6,1fr);" id="eval-bad"></div>
+          <div style="font-size:11px;font-weight:700;color:var(--red);margin-top:4px;">~30,000 tokens</div>
+        </div>
+        <div class="mech-arrow">&rarr;</div>
+        <div class="mcard mcard-good">
+          <div class="mch">After &mdash; eval only on logic changes</div>
+          Hash the logic section. Description-only change &rarr; skip eval. Only trigger when step instructions were actually modified.
+          <div style="margin-top:8px;font-size:10px;color:var(--text3);">~4 skills had logic changes:</div>
+          <div class="eval-grid" style="grid-template-columns:repeat(5,1fr);" id="eval-good"></div>
+          <div style="font-size:11px;font-weight:700;color:var(--green);margin-top:4px;">~4,800 tokens</div>
+          <br><span class="pill pill-green">saves ~15% of total spend</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="mech-model" class="tab-pane">
+      <div class="mech-grid">
+        <div class="mcard mcard-bad">
+          <div class="mch">Before &mdash; Claude Sonnet for everything</div>
+          Every call uses Sonnet pricing. Structural edits don&rsquo;t need that level of reasoning.
+          <div style="margin-top:8px;display:flex;flex-direction:column;gap:5px;font-size:11px;">
+            <div style="display:flex;justify-content:space-between;"><span>Description rewrite</span><span style="color:var(--red);">Sonnet &mdash; expensive</span></div>
+            <div style="display:flex;justify-content:space-between;"><span>Redundancy removal</span><span style="color:var(--red);">Sonnet &mdash; expensive</span></div>
+            <div style="display:flex;justify-content:space-between;"><span>Formatting pass</span><span style="color:var(--red);">Sonnet &mdash; expensive</span></div>
+            <div style="display:flex;justify-content:space-between;"><span>Eval + scoring</span><span style="color:var(--amber);">Sonnet &mdash; appropriate</span></div>
+          </div>
+        </div>
+        <div class="mech-arrow">&rarr;</div>
+        <div class="mcard mcard-good">
+          <div class="mch">After &mdash; route by task complexity</div>
+          Structural edits go to Claude Haiku (~10&times; cheaper). Sonnet reserved for eval scoring and logic rewrites.
+          <div style="margin-top:8px;display:flex;flex-direction:column;gap:5px;font-size:11px;">
+            <div style="display:flex;justify-content:space-between;"><span>Description rewrite</span><span style="color:var(--green);">Haiku &mdash; 10&times; cheaper</span></div>
+            <div style="display:flex;justify-content:space-between;"><span>Redundancy removal</span><span style="color:var(--green);">Haiku &mdash; 10&times; cheaper</span></div>
+            <div style="display:flex;justify-content:space-between;"><span>Formatting pass</span><span style="color:var(--green);">Haiku &mdash; 10&times; cheaper</span></div>
+            <div style="display:flex;justify-content:space-between;"><span>Eval + scoring</span><span style="color:var(--amber);">Sonnet &mdash; appropriate</span></div>
+          </div>
+          <br><span class="pill pill-green">saves ~10% of total spend</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:1rem;">
+      <div style="background:var(--red-light);border:1px solid var(--red);border-radius:var(--radius);padding:12px 16px;">
+        <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:2px;">Before</div>
+        <div style="font-size:24px;font-weight:800;color:var(--red);">~$45&ndash;55</div>
+        <div style="font-size:11px;color:var(--text3);">10 skills &middot; 1 session &middot; 30 turns</div>
+      </div>
+      <div style="background:var(--green-light);border:1px solid var(--green);border-radius:var(--radius);padding:12px 16px;">
+        <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:2px;">After</div>
+        <div style="font-size:24px;font-weight:800;color:var(--green);">~$3&ndash;6</div>
+        <div style="font-size:11px;color:var(--text3);">10 sessions &middot; compressed &middot; tiered models</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PROMPTING ═══ -->
+<div class="page" id="page-prompting">
+  <div class="content">
+    <div class="sec-head"><h2>Step-by-step: how to prompt Claude efficiently</h2><p>The exact message structure that avoids the $50 mistake. Click through each step.</p></div>
+    <div class="step-nav" id="prompt-nav"></div>
+    <div id="prompt-content"></div>
+    <div class="nav-btns">
+      <button id="prompt-prev" onclick="changeStep(-1)" style="display:none;">&larr; Previous</button>
+      <button id="prompt-next" onclick="changeStep(1)">Next step &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DIAGRAMS ═══ -->
+<div class="page" id="page-diagrams">
+  <div class="content">
+    <div class="sec-head"><h2>Diagrams</h2><p>Plain-language visuals — right-click any image to save, or download the SVG source from <a href="https://github.com/username/username.github.io/tree/main/articles/claude-token-waste/diagrams" target="_blank" rel="noopener">GitHub &rarr;</a></p></div>
+    <img class="diag-img" src="diagrams/before-expensive.svg" alt="The expensive way">
+    <div class="diag-caption">Diagram 1 &mdash; The problem: one conversation, growing context, 93% waste</div>
+    <img class="diag-img" src="diagrams/after-efficient.svg" alt="The efficient way">
+    <div class="diag-caption">Diagram 2 &mdash; The fix: ten flat sessions, context never grows</div>
+    <img class="diag-img" src="diagrams/semantic-rulebook.svg" alt="Shared rulebook">
+    <div class="diag-caption">Diagram 3 &mdash; Cross-file consistency via a shared canonical rulebook</div>
+    <img class="diag-img" src="diagrams/cost-comparison.svg" alt="Cost comparison">
+    <div class="diag-caption">Diagram 4 &mdash; Same result, $46 less</div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  Built with <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a> (Anthropic) &middot;
+  <a href="https://github.com/username/username.github.io" target="_blank" rel="noopener">View source &uarr;</a> &middot;
+  <a href="../../index.html">&larr; All articles</a>
+</footer>
+
+<script src="../../_shared/nav.js"></script>
+<script>renderNav({ current: 'articles' });</script>
+<script>
+// ── Page switching ──
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.pnav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+// ── Shared bar scale ──
+const SCALE = 380;
+
+// ── Before chart ──
+function buildBefore() {
+  const turns = []; let hist = 0;
+  for (let s = 1; s <= 10; s++) {
+    const sk = 1100 + Math.round(Math.random() * 200);
+    for (let t = 1; t <= 3; t++) {
+      const ev = t===2 ? 900+Math.round(Math.random()*300) : t===3 ? 700+Math.round(Math.random()*200) : 0;
+      const cl = t===1 ? 300+Math.round(Math.random()*200) : 80+Math.round(Math.random()*80);
+      const us = 300+Math.round(Math.random()*200);
+      const total = sk+hist+ev+cl+us;
+      turns.push({skill:s,turn:t,skillRead:sk,history:hist,evalCost:ev,clarify:cl,useful:us,total});
+      hist += total;
+    }
+  }
+  return turns;
+}
+const bTurns = buildBefore();
+let bActive = 0;
+
+function buildBFilter() {
+  const f = document.getElementById('b-filter');
+  ['All','S1','S2','S3','S4','S5','S6','S7','S8','S9','S10'].forEach((l,i) => {
+    const b = document.createElement('button'); b.className = 'filt-btn' + (i===0?' on-red':'');
+    b.textContent = l;
+    b.onclick = () => { bActive=i; document.querySelectorAll('#b-filter .filt-btn').forEach(x=>x.className='filt-btn'); b.classList.add('on-red'); renderBefore(); };
+    f.appendChild(b);
+  });
+}
+
+function renderBefore() {
+  const turns = bActive===0 ? bTurns : bTurns.filter(t=>t.skill===bActive);
+  const maxT = Math.max(...turns.map(t=>t.total));
+  const tot = turns.reduce((a,t)=>a+t.total,0), use = turns.reduce((a,t)=>a+t.useful,0);
+  document.getElementById('b-turns').textContent = turns.length;
+  document.getElementById('b-total').textContent = Math.round(tot/1000)+'k';
+  document.getElementById('b-useful').textContent = Math.round(use/1000)+'k';
+  document.getElementById('b-waste').textContent = Math.round((1-use/tot)*100)+'%';
+  const area = document.getElementById('b-chart'); area.innerHTML='';
+  turns.forEach(t => {
+    const row=document.createElement('div'); row.className='bar-row';
+    const lbl=document.createElement('div'); lbl.className='bar-label'; lbl.textContent=`S${t.skill}·T${t.turn}`; row.appendChild(lbl);
+    const track=document.createElement('div'); track.className='bar-track';
+    [{v:t.skillRead,c:'#F09595',n:'skill re-read'},{v:t.history,c:'#E24B4A',n:'prior history'},{v:t.evalCost,c:'#EF9F27',n:'eval'},{v:t.clarify,c:'#FAC775',n:'clarify'},{v:t.useful,c:'#97C459',n:'useful'}].forEach(seg => {
+      if(!seg.v) return;
+      const w=Math.max(2,Math.round(seg.v/maxT*SCALE));
+      const el=document.createElement('div'); el.className='bar-seg'; el.style.cssText=`width:${w}px;background:${seg.c};`;
+      el.addEventListener('mouseenter',e=>{ const tip=document.getElementById('b-tip'); tip.innerHTML=`<strong>S${t.skill} T${t.turn}</strong><br>${seg.n}: ${seg.v.toLocaleString()} tokens`; tip.style.display='block'; tip.style.top=(row.offsetTop-4)+'px'; tip.style.left=(e.target.offsetLeft+w+8)+'px'; });
+      el.addEventListener('mouseleave',()=>document.getElementById('b-tip').style.display='none');
+      track.appendChild(el);
+    });
+    const tot2=document.createElement('div'); tot2.className='bar-total'; tot2.textContent=Math.round(t.total/1000)+'k';
+    row.appendChild(track); row.appendChild(tot2); area.appendChild(row);
+  });
+}
+buildBFilter(); renderBefore();
+
+// ── After chart ──
+function buildAfter() {
+  const turns = [];
+  for (let s=1;s<=10;s++) {
+    const comp=320+Math.round(Math.random()*80), hasEval=Math.random()>0.4;
+    for(let t=1;t<=2;t++){
+      const sr=t===1?comp:0, ev=(t===2&&hasEval)?500+Math.round(Math.random()*200):0;
+      const ha=t===1?200+Math.round(Math.random()*100):0, us=280+Math.round(Math.random()*150);
+      turns.push({skill:s,turn:t,skillRead:sr,evalCost:ev,haiku:ha,useful:us,total:sr+ev+ha+us,hasEval});
+    }
+  }
+  return turns;
+}
+const aTurns = buildAfter();
+let aActive = 0;
+
+function buildAFilter() {
+  const f=document.getElementById('a-filter');
+  ['All','S1','S2','S3','S4','S5','S6','S7','S8','S9','S10'].forEach((l,i)=>{
+    const b=document.createElement('button'); b.className='filt-btn'+(i===0?' on-green':'');
+    b.textContent=l;
+    b.onclick=()=>{ aActive=i; document.querySelectorAll('#a-filter .filt-btn').forEach(x=>x.className='filt-btn'); b.classList.add('on-green'); renderAfter(); };
+    f.appendChild(b);
+  });
+}
+
+function renderAfter() {
+  const turns=aActive===0?aTurns:aTurns.filter(t=>t.skill===aActive);
+  const tot=turns.reduce((a,t)=>a+t.total,0), use=turns.reduce((a,t)=>a+t.useful,0);
+  document.getElementById('a-turns').textContent=turns.length;
+  document.getElementById('a-total').textContent=Math.round(tot/1000)+'k';
+  document.getElementById('a-useful').textContent=Math.round(use/1000)+'k';
+  document.getElementById('a-waste').textContent=Math.round((1-use/tot)*100)+'%';
+  const area=document.getElementById('a-chart'); area.innerHTML='';
+  turns.forEach(t=>{
+    const row=document.createElement('div'); row.className='bar-row';
+    const lbl=document.createElement('div'); lbl.className='bar-label'; lbl.textContent=`S${t.skill}·T${t.turn}`; row.appendChild(lbl);
+    const track=document.createElement('div'); track.className='bar-track';
+    [{v:t.skillRead,c:'#9FE1CB',n:'compressed skill'},{v:t.haiku,c:'#C0DD97',n:'Haiku edit'},{v:t.evalCost,c:'#EF9F27',n:'eval'},{v:t.useful,c:'#97C459',n:'useful'}].forEach(seg=>{
+      if(!seg.v) return;
+      const w=Math.max(2,Math.round(seg.v/12000*SCALE));
+      const el=document.createElement('div'); el.className='bar-seg'; el.style.cssText=`width:${w}px;background:${seg.c};`;
+      el.addEventListener('mouseenter',e=>{ const tip=document.getElementById('a-tip'); tip.innerHTML=`<strong>S${t.skill} T${t.turn}</strong><br>${seg.n}: ${seg.v.toLocaleString()} tokens`; tip.style.display='block'; tip.style.top=(row.offsetTop-4)+'px'; tip.style.left=(e.target.offsetLeft+w+8)+'px'; });
+      el.addEventListener('mouseleave',()=>document.getElementById('a-tip').style.display='none');
+      track.appendChild(el);
+    });
+    const tot2=document.createElement('div'); tot2.className='bar-total'; tot2.textContent=(t.total/1000).toFixed(1)+'k';
+    row.appendChild(track); row.appendChild(tot2);
+    if(!t.hasEval&&t.turn===2){ const badge=document.createElement('span'); badge.className='skip-badge'; badge.textContent='eval skipped'; row.appendChild(badge); }
+    area.appendChild(row);
+  });
+}
+buildAFilter(); renderAfter();
+
+// ── Mechanics helpers ──
+function swTab(group, id, btn) {
+  const prefix = group+'-';
+  document.querySelectorAll('[' + 'id' + '^="' + prefix + '"].tab-pane').forEach(p=>p.classList.remove('on'));
+  btn.closest('.content').querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById(prefix+id).classList.add('on');
+  btn.classList.add('on');
+}
+
+function updateCtx(v) {
+  v=parseInt(v);
+  const bv=document.getElementById('ctx-bad'); bv.innerHTML='';
+  const gv=document.getElementById('ctx-good'); gv.innerHTML='';
+  const cols=['#F09595','#E24B4A','#F5C4B3','#EF9F27','#FAC775','#E24B4A','#F09595','#E24B4A','#F5C4B3','#EF9F27'];
+  let totB=0;
+  for(let i=0;i<v;i++){ const w=Math.min(8+i*3,22); const el=document.createElement('div'); el.className='ctx-block'; el.style.cssText=`width:${w}px;background:${cols[i%cols.length]};opacity:${0.5+(i/v)*0.5};`; bv.appendChild(el); totB+=2000+i*800; }
+  document.getElementById('ctx-bad-count').textContent=`Context: ~${Math.round(totB/1000)}k tokens (growing)`;
+  for(let i=0;i<Math.min(v,2);i++){ const el=document.createElement('div'); el.className='ctx-block'; el.style.cssText='width:22px;background:#97C459;'; gv.appendChild(el); }
+  document.getElementById('ctx-good-count').textContent=`Context: ~${Math.round((320+Math.min(v,2)*900)/1000)}k tokens (flat)`;
+}
+updateCtx(1);
+
+(function buildEvalGrids(){
+  const bad=document.getElementById('eval-bad');
+  for(let i=0;i<30;i++){ const el=document.createElement('div'); el.className='eval-cell'; el.style.cssText='background:#F09595;color:#A32D2D;'; el.textContent='E'; bad.appendChild(el); }
+  const good=document.getElementById('eval-good');
+  for(let i=0;i<10;i++){ const el=document.createElement('div'); el.className='eval-cell'; el.style.cssText=`background:${i<4?'#EF9F27':'#C0DD97'};color:${i<4?'#633806':'#3B6D11'};`; el.textContent=i<4?'E':'✓'; good.appendChild(el); }
+})();
+
+// ── Prompting stepper ──
+const steps=[
+  {num:'Before',title:'The wrong way — one vague prompt for everything',bad:true,desc:'What most people do: one Claude.ai conversation, all 10 skills, loose instructions.',
+   chat:[{role:'user',text:'I have 10 skills in my Claude skill creator plugin. Can you refactor all of them to be more consistent and remove any redundancy?'},{role:'claude',text:'Sure! Let me start by reading all 10 skill files...\n[reads all 10 files — ~18,000 tokens]\n\nBefore I begin, a few questions:\n1. What does "consistent" mean — formatting, tone, structure?\n2. Should I preserve all existing examples?\n3. Are there files that should NOT be changed?\n4. What's your priority order?'}],
+   anns:[{type:'bad',label:'problem — vague intent',text:'Claude loaded all 10 files into a single context. Every subsequent message pays to re-read all of them.'},{type:'bad',label:'problem — clarification loop',text:'4 clarification questions = 4 wasted round trips before any work begins.'}],
+   tok:{label:'Context after turn 1',val:'~20,000 tokens',bad:true}},
+  {num:'Step 1',title:'Plan first in a throwaway Claude Haiku session',desc:'Before touching any file, spend one cheap session defining your spec. Claude reads zero skill files.',
+   chat:[{role:'user',text:'I'm going to refactor 10 Claude skill files for consistency. Help me define the spec first — don't read any files yet.\n\nGoals:\n• Consistent YAML frontmatter\n• Bullet-list bodies, no prose\n• Examples → references/ subfolder\n• Descriptions ≤80 words, imperative tone\n\nNOT changing: skill logic, step order, scripts\n\nOutput: one-page spec to paste into each skill session'},{role:'claude',text:'SKILL REFACTOR SPEC v1\n────────────────────\nSTRUCTURE\n• Frontmatter: name, description (≤80w), compatibility\n• Body: numbered lists only\n• Examples → references/examples.md\n\nEVAL POLICY\n• Description-only change → skip eval\n• Step/logic change → run eval on that skill only'}],
+   anns:[{type:'good',label:'why this works',text:'Zero skill files loaded. Total cost ~800 tokens. The output is a reusable spec pasted into every subsequent session.'},{type:'good',label:'eval policy upfront',text:'Defining "skip eval for description-only" now eliminates the biggest per-skill cost before sessions begin.'}],
+   tok:{label:'Total planning cost',val:'~800 tokens',bad:false}},
+  {num:'Step 2',title:'One fresh Claude session per skill — dense opening prompt',desc:'New conversation for skill 1 only. Spec + file + exact changes in one message. Zero clarification rounds.',
+   chat:[{role:'user',text:'[NEW CONVERSATION — Skill 1 only]\n\nCONTEXT: [paste spec here]\n\nTASK: Refactor skill-1/SKILL.md per spec.\n\nSPECIFIC CHANGES:\n1. Description 142 words → trim to ≤80w\n2. Lines 45–89: prose → numbered list\n3. Lines 120–156: replace with shared-patterns reference\n4. Lines 201–230: move to references/examples.md\n\nDO NOT change: step logic, bundled scripts\n\nFILE: [paste skill-1/SKILL.md here]\n\nOUTPUT: Modified SKILL.md only. No explanation.'},{role:'claude',text:'```markdown\n---\nname: docx\ndescription: Create, read, edit, or manipulate Word documents. Use when the user mentions Word, .docx, reports, memos, or formatted documents.\n---\n\n## Steps\n1. Call view SKILL.md as first action\n[continues — clean, spec-compliant]\n```'}],
+   anns:[{type:'good',label:'dense opener = zero clarification',text:'Every decision pre-made. Claude goes straight to work.'},{type:'good',label:'no explanation needed',text:'This phrase alone saves ~400 tokens of Claude narrating what it did.'},{type:'good',label:'fresh session',text:'Context = spec + file + instructions = ~2,500 tokens. Not 20,000.'}],
+   tok:{label:'Context for skill 1',val:'~2,500 tokens',bad:false}},
+  {num:'Step 3',title:'Diff prompt on turn 2 — only send what changed',desc:'For fixes after the first output, send only the delta — not the whole file again.',
+   chat:[{role:'user',text:'Two fixes — respond with only the changed sections, not the full file:\n\n1. Line 3: remove "or formatted" — too wordy\n2. Step 4: add --break-system-packages flag to pip install'},{role:'claude',text:'Changed sections only:\n\nLine 3 description:\n`description: Create, read, edit Word documents. Use when user mentions Word, .docx, reports, or documents with tables.`\n\nStep 4:\n`4. pip install python-docx --break-system-packages`'}],
+   anns:[{type:'good',label:'diff prompt pattern',text:'Claude returns ~80 tokens instead of regenerating the entire 1,800-token file. Most powerful per-turn habit.'}],
+   tok:{label:'Turn 2 output cost',val:'~80 tokens',bad:false}},
+  {num:'Step 4',title:'Eval gate — only when logic changed',desc:'Skill 1 was description + formatting only → skip eval. Skill 3 had rewritten logic → run eval.',
+   chat:[{role:'user',text:'skill-1: description + formatting changes only.\nPer spec: skip eval. ✓ Mark complete.\n\nskill-3: step logic rewritten. Run eval set at skill-3/evals.json and report pass/fail only.'},{role:'claude',text:'skill-3/evals.json — 8 test cases:\n✓ 6 passed\n✗ 2 failed:\n  - test_5: trigger didn't fire on "convert my spreadsheet"\n  - test_7: step 3 output format mismatch\n\nNo other evals needed per spec.'}],
+   anns:[{type:'good',label:'eval gate',text:'Skipping unnecessary evals across 10 skills avoids ~18,000 tokens of overhead.'},{type:'good',label:'pass/fail only',text:'Asking for a summary cuts Claude's response by ~60%.'}],
+   tok:{label:'Evals: 3 skills not 10',val:'saves ~7,000 tokens',bad:false}},
+  {num:'Step 5',title:'The full picture — all 10 skills',desc:'10 isolated Claude sessions, 1–2 turns each, evals only where logic changed. $4 total.',
+   chat:[{role:'user',text:'Summary:\n\nPlanning (Haiku): ~800 tokens\nSkills 1–10 (Sonnet): ~35,000 tokens\nEvals (3 skills): ~7,200 tokens\n─────────────────\nTotal: ~43,000 tokens'},{role:'claude',text:'Correct. ~$3–5 at current Sonnet pricing.\n\nvs. original approach: ~450,000 tokens ≈ $45–55\n\nReduction: ~90%'}],
+   anns:[{type:'good',label:'compounding effect',text:'Each optimization is modest alone. Combined they stack to ~10× cost reduction.'},{type:'good',label:'reusable spec',text:'The planning spec pays forward. You pay the ~800 token cost once.'}],
+   tok:{label:'Total: all 10 skills',val:'~43,000 tokens (~$4)',bad:false}}
+];
+
+let curStep=0;
+
+function renderStepNav(){
+  const nav=document.getElementById('prompt-nav'); nav.innerHTML='';
+  steps.forEach((s,i)=>{
+    const dot=document.createElement('div'); dot.className='step-dot'+(i===curStep?' active':i<curStep?' done':s.bad?' bad':''); dot.textContent=i===0?'✕':i; dot.onclick=()=>{curStep=i;renderStep();}; nav.appendChild(dot);
+    if(i<steps.length-1){const ln=document.createElement('div');ln.className='step-line';nav.appendChild(ln);}
+  });
+}
+
+function renderStep(){
+  const s=steps[curStep];
+  let h=`<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px;"><span style="font-size:11px;color:var(--text3);">${s.num}</span><span style="font-size:15px;font-weight:700;">${s.title}</span></div><p style="font-size:13px;color:var(--text2);margin-bottom:12px;">${s.desc}</p><div class="chat-wrap">`;
+  s.chat.forEach(m=>{ h+=`<div class="bubble ${m.role}"><div class="bubble-lbl">${m.role==='user'?'You':'Claude'}</div><div class="bubble-inner">${m.text.replace(/\n/g,'<br>')}</div></div>`; });
+  h+='</div>';
+  s.anns.forEach(a=>{ h+=`<div class="ann ${a.type}"><div class="ann-label">${a.label}</div>${a.text}</div>`; });
+  h+=`<div style="display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 14px;background:var(--bg2);border-radius:var(--radius);"><span style="font-size:12px;color:var(--text3);">${s.tok.label}</span><span class="pill ${s.tok.bad?'pill-red':'pill-green'}">${s.tok.val}</span></div>`;
+  document.getElementById('prompt-content').innerHTML=h;
+  document.getElementById('prompt-prev').style.display=curStep>0?'block':'none';
+  document.getElementById('prompt-next').textContent=curStep<steps.length-1?'Next step →':'Start over';
+  renderStepNav();
+}
+
+function changeStep(dir){curStep=(curStep+dir+steps.length)%steps.length;renderStep();}
+renderStep();
+</script>
+</body>
+</html>

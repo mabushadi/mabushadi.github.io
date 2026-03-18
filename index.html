@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Articles — Interactive Guides</title>
+<meta name="description" content="Interactive articles about working efficiently with Claude (Anthropic). Real lessons, live visualizations, shareable diagrams.">
+<link rel="stylesheet" href="_shared/style.css">
+<style>
+  .hero { text-align: center; padding: 4rem 1.5rem 2.5rem; max-width: 680px; margin: 0 auto; }
+  .hero h1 { font-size: clamp(24px, 5vw, 42px); font-weight: 800; line-height: 1.15; margin-bottom: 1rem; }
+  .hero h1 span { color: var(--blue); }
+  .hero p { font-size: 16px; color: var(--text2); max-width: 500px; margin: 0 auto 2rem; }
+  .articles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; max-width: 960px; margin: 0 auto; padding: 0 1.5rem 4rem; }
+  .articles-label { max-width: 960px; margin: 0 auto; padding: 0 1.5rem 1rem; font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--text3); }
+</style>
+</head>
+<body>
+
+<header class="site-nav"></header>
+
+<main>
+  <div class="hero">
+    <div class="pill pill-blue" style="margin-bottom:1rem;">Claude · Anthropic · Interactive</div>
+    <h1>Real lessons from<br>working with <span>Claude</span></h1>
+    <p>Interactive articles with live visualizations, diagrams you can download, and workflows you can copy today.</p>
+  </div>
+
+  <div class="articles-label" id="articles">ARTICLES</div>
+
+  <div class="articles-grid">
+
+    <a class="article-card" href="articles/claude-token-waste/index.html">
+      <div class="ac-tag">CLAUDE · PRODUCTIVITY · LESSONS LEARNED</div>
+      <div class="ac-title">I spent $50 letting Claude fix my files — here's what I did wrong</div>
+      <div class="ac-desc">A brutally honest account of hitting my usage limit and finally understanding why the obvious approach was the wrong one.</div>
+      <div class="ac-meta">
+        <span>March 2026</span>
+        <span class="ac-pill pill-red">$50 mistake</span>
+        <span class="ac-pill pill-green">$4 solution</span>
+        <span class="ac-pill pill-blue">Interactive</span>
+      </div>
+    </a>
+
+    <!-- Add new articles here — copy the card above and update href, title, desc, date -->
+
+    <div class="article-card" style="border-style:dashed;opacity:0.5;cursor:default;">
+      <div class="ac-tag">COMING SOON</div>
+      <div class="ac-title">Next article</div>
+      <div class="ac-desc">Add a new article by creating articles/your-slug/ and adding a card here.</div>
+      <div class="ac-meta"><span>See README.md for instructions</span></div>
+    </div>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  Built with <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a> (Anthropic) ·
+  <a href="https://github.com/username/username.github.io" target="_blank" rel="noopener">View source on GitHub ↗</a>
+</footer>
+
+<script src="_shared/nav.js"></script>
+<script>renderNav({ current: 'home' });</script>
+</body>
+</html>
