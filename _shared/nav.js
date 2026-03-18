@@ -20,7 +20,7 @@ function renderNav(opts = {}) {
     <nav class="nav-links">
       <a class="nav-link ${current === 'home' ? 'active' : ''}" href="${base}index.html">Home</a>
       <a class="nav-link ${current === 'articles' ? 'active' : ''}" href="${base}index.html#articles">Articles</a>
-      <a class="nav-link" href="https://github.com/username/username.github.io" target="_blank" rel="noopener">GitHub ↗</a>
+      <a class="nav-link" href="https://github.com/mabushadi/mabushadi.github.io" target="_blank" rel="noopener">GitHub ↗</a>
     </nav>
   `;
 }

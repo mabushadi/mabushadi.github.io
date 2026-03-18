@@ -35,7 +35,7 @@ Interactive articles and visualizations, published via GitHub Pages.
 
 1. Go to your repo → **Settings** → **Pages**
 2. Source: **Deploy from a branch** → branch: `main`, folder: `/ (root)`
-3. Save — your site appears at `https://username.github.io`
+3. Save — your site appears at `https://mabushadi.github.io`
 
 ## Editing articles
 
