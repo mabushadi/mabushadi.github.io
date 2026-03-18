@@ -4,7 +4,7 @@ Interactive articles and visualizations, published via GitHub Pages.
 
 ## Live site
 
-**https://username.github.io** ← replace with your actual URL after setup
+**https://mabushadi.github.io**
 
 ## Structure
 
